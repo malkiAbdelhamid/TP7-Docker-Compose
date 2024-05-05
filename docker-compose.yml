@@ -1,0 +1,46 @@
+version: '3.9'
+services:
+  eureka-server:
+    image: registry-image
+    ports:
+      - 8889:8888
+
+  gateway-service:
+    image: gateway-image
+    ports:
+      - 9090:7777
+    depends_on:
+      - eureka-server
+    environment:
+      profile: "default"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
+
+  ms-formation-service:
+    build: /ms-formation/
+    image: ms-formation
+    depends_on:
+      - eureka-server
+      - gateway-service
+    environment:
+      profile: "default"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
+
+  ms-scolarite-service:
+    build: /ms-scolarite/
+    image: ms-scolarite
+    depends_on:
+      - eureka-server
+      - gateway-service
+    environment:
+      profile: "default"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
+
+  ms-bourse-service:
+    build: /ms-bourse/
+    image: ms-bourse
+    depends_on:
+      - eureka-server
+      - gateway-service
+    environment:
+      profile: "default"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
