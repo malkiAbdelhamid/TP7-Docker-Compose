@@ -1,0 +1,3 @@
+FROM openjdk:17-jdk-alpine
+COPY target/ms-scolarite-mongo*.jar ms-scolarite-mongo.jar
+CMD java -jar /ms-scolarite-mongo.jar

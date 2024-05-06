@@ -3,31 +3,33 @@ services:
   eureka-server:
     image: registry-image
     ports:
-      - 8889:8888
+      - 8888:8888
 
   gateway-service:
     image: gateway-image
-    ports:
-      - 9090:7777
     depends_on:
       - eureka-server
+    ports:
+      - 7777:7777
     environment:
       profile: "default"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
+
 
   ms-formation-service:
     build: /ms-formation/
-    image: ms-formation
+    image: ms-formation-image
     depends_on:
       - eureka-server
       - gateway-service
     environment:
       profile: "default"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
+
 
   ms-scolarite-service:
     build: /ms-scolarite/
-    image: ms-scolarite
+    image: ms-scolarite-image
     depends_on:
       - eureka-server
       - gateway-service
@@ -35,12 +37,64 @@ services:
       profile: "default"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
 
+
   ms-bourse-service:
     build: /ms-bourse/
-    image: ms-bourse
+    image: ms-bourse-image
     depends_on:
       - eureka-server
       - gateway-service
     environment:
       profile: "default"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
+
+
+  db-mysql-formation:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "${password}"
+      MYSQL_DATABASE: "${formation_bdd}"
+
+  ms-formation-mysql-service:
+    build: /ms-formation-mysql/
+    image: ms-formation-mysql-image
+    depends_on:
+      - eureka-server
+      - gateway-service
+      - db-mysql-formation
+
+
+    environment:
+      profile: "default"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
+      spring.datasource.url: "${url}"
+      spring.datasource.password: "${password}"
+    restart: on-failure
+
+
+  mongodb-esisba:
+    image: mongo
+
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+
+
+  ms-scolrite-mongo-service:
+    build: /ms-scolarite-mongo/
+    image: ms-scolarite-mongo-image
+    depends_on:
+      - eureka-server
+      - gateway-service
+      -  mongodb-esisba
+
+
+    environment:
+      profile: "default"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8888/eureka"
+      spring.data.mongodb.host: "mongodb-esisba"
+      spring.data.mongodb.port: 27017
+      spring.data.mongodb.database: "${scolarite_bdd}"
+
+    restart: on-failure
